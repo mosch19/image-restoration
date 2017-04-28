@@ -11,9 +11,11 @@ using namespace std;
 int main()
 {
     CImg<float> image;
+    CImg<float> image2;
     string location = "/home/mosch/Documents/Restoration/lena_full.jpg";
     image.load(location.c_str());
-    CImgDisplay main_disp(image, "Lena");
+    image2 = image.get_RGBtoYCbCr().get_channel(0);
+    CImgDisplay main_disp(image, "Lena"), draw_disp(image2, "Gray Lena");
 
     while(!main_disp.is_closed)
     {
