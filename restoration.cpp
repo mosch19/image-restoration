@@ -11,7 +11,7 @@ using namespace std;
 int main()
 {
     CImg<float> image;
-    string location = "/home/mosch/Documents/C++/lena_full.jpg";
+    string location = "/home/mosch/Documents/Restoration/lena_full.jpg";
     image.load(location.c_str());
     CImgDisplay main_disp(image, "Lena");
 
