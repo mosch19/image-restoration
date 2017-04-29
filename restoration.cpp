@@ -13,14 +13,34 @@
 using namespace cimg_library;
 using namespace std;
 
+void insertionSort(int frame[])
+{
+    int temp;
+    int i = 0;
+    int j = 0;
+
+    for(i = 0; i < 9; i++)
+    {
+        temp = frame[i];
+
+        for(j = i-1; j >= 0 && temp < frame[j]; j--)
+        {
+            frame[j+1] = frame[j];
+        }
+        
+        frame[j+1] = temp;
+    }
+}
+
+/*
 void computeDft(const vector<double> &inreal, const vector<double> &inimag,
 		vector<double> &outreal, vector<double> &outimag) {
 	
 	unsigned int n = inreal.size();
-	for (unsigned int k = 0; k < n; k++) {  /* For each output element */
+	for (unsigned int k = 0; k < n; k++) {  
 		double sumreal = 0;
 		double sumimag = 0;
-		for (unsigned int t = 0; t < n; t++) {  /* For each input element */
+		for (unsigned int t = 0; t < n; t++) {  
 			double angle = 2 * M_PI * t * k / n;
 			sumreal +=  inreal[t] * cos(angle) + inimag[t] * sin(angle);
 			sumimag += -inreal[t] * sin(angle) + inimag[t] * cos(angle);
@@ -29,6 +49,7 @@ void computeDft(const vector<double> &inreal, const vector<double> &inimag,
 		outimag[k] = sumimag;
 	}
 }
+*/
 
 /*
 float MSE(float image1, float image2)
@@ -57,35 +78,60 @@ int main()
     CImg<float> image;
     CImg<float> image2;
 
-    float area = image.width * image.height;
-    
-
     string location = "/home/mosch/Documents/Restoration/lena_full.jpg";
     original.load(location.c_str());
     image = original.get_RGBtoYCbCr().get_channel(0);
+
+    float width = image.width;
+    float height = image.height;
+    float area = width * height;
+    int frame[9];
+
+    //mess it up
+    image.noise(40);
+    //image.blur(2.5);
     image2 = image;
 
-    vector<float> input[int(area)];
-    int z = 0;
+    //vector<float> input[int(area)];
+    //int z = 0;
 
-    cimg_forXY(image, x, y)
+    for (int x = 1; x < int(width) - 1; x++)
     {
-        input[z] = image(x,y);
-        z++;
+        for (int y = 1; y < int(height) - 1; y++)
+        {
+            frame[0] = int(image2(x - 1 ,y - 1));
+            frame[1] = int(image2(x, y - 1));
+            frame[2] = int(image2(x + 1, y - 1));
+            frame[3] = int(image2(x - 1, y));
+            frame[4] = int(image2(x, y));
+            frame[5] = int(image2(x + 1, y));
+            frame[6] = int(image2(x - 1, y + 1));
+            frame[7] = int(image2(x, y + 1));
+            frame[8] = int(image2(x + 1, y + 1));
+
+            insertionSort(frame);
+            image2(x,y) = frame[4];
+        }
+    }
+
+    //cimg_forXY(image2, x, y)
+    //{
+
         
+      //  insertionSort(frame);
+
+        //image2(x,y) = frame[4];
         //if (image(x,y) < 100)
         //{
         //    image(x,y) = 0;
         //    cout << "value: " << image(x,y) << endl;
         //}
     
-    }
+    //}
 
-    computeDft(input);
+    //computeDft(input);
 
-    //mess it up
-    image2.noise(40);
-    image2.blur(2.5);
+
 
     //calculate MSE between two images
     float sum_squared = 0;
@@ -103,7 +149,7 @@ int main()
 
     mse = sum_squared/area;
 
-    CImgDisplay org_disp(original, "Original"), main_disp(image, "Greyscale Lena"), draw_disp(image2, "Messed Up");
+    CImgDisplay org_disp(original, "Original"), main_disp(image, "Low Quality Lena"), draw_disp(image2, "Median Filtered");
     cout << "MSE: " << mse << endl;
 
 /*
@@ -151,6 +197,7 @@ int main()
         cout << "DFT: " << output_seq[z] << endl;
     }
 */
+
     //display the images
     while(!draw_disp.is_closed)
     {
