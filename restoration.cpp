@@ -3,6 +3,7 @@
 #include <string>
 #include <stdlib.h>
 #include <math.h>
+#include <opencv2/opencv.hpp>
 #include <cmath>
 #include <vector>
 #include <complex>
@@ -11,7 +12,40 @@
 #define cimg_use_jpeg
 
 using namespace cimg_library;
+using namespace cv;
 using namespace std;
+
+//Compile with:  g++ `pkg-config --cflags opencv` restoration.cpp `pkg-config --libs opencv` -o runt -L/usr/X11R6/lib -lm -lpthread -lX11
+
+void takeDFT(Mat& source, Mat& destination)
+{
+    Mat dftIN[2] = {source, Mat::zeros(source.size(), CV_32F)};
+    Mat dftReady;
+    merge(dftIN, 2, dftReady);
+    Mat dftOUT;
+    
+    dft(dftReady, dftOUT, DFT_COMPLEX_OUTPUT);
+
+    destination = dftOUT;
+}
+
+void showDFT(Mat& source)
+{
+    Mat splitArray[2] = {Mat::zeros(source.size(), CV_32F), Mat::zeros(source.size(), CV_32F)};
+    split(source, splitArray);
+    
+    Mat dftmagnitude;
+
+    magnitude(splitArray[0], splitArray[1], dftmagnitude);
+    dftmagnitude += Scalar::all(1);
+
+    log(dftmagnitude, dftmagnitude);
+    normalize(dftmagnitude, dftmagnitude, 0, 1, CV_MINMAX);
+
+    imshow("DFT", dftmagnitude);
+    waitKey();
+
+}
 
 void insertionSort(int frame[])
 {
@@ -31,25 +65,6 @@ void insertionSort(int frame[])
         frame[j+1] = temp;
     }
 }
-
-/*
-void computeDft(const vector<double> &inreal, const vector<double> &inimag,
-		vector<double> &outreal, vector<double> &outimag) {
-	
-	unsigned int n = inreal.size();
-	for (unsigned int k = 0; k < n; k++) {  
-		double sumreal = 0;
-		double sumimag = 0;
-		for (unsigned int t = 0; t < n; t++) {  
-			double angle = 2 * M_PI * t * k / n;
-			sumreal +=  inreal[t] * cos(angle) + inimag[t] * sin(angle);
-			sumimag += -inreal[t] * sin(angle) + inimag[t] * cos(angle);
-		}
-		outreal[k] = sumreal;
-		outimag[k] = sumimag;
-	}
-}
-*/
 
 /*
 float MSE(float image1, float image2)
@@ -114,27 +129,10 @@ int main()
         }
     }
 
-    //cimg_forXY(image2, x, y)
-    //{
-
-        
-      //  insertionSort(frame);
-
-        //image2(x,y) = frame[4];
-        //if (image(x,y) < 100)
-        //{
-        //    image(x,y) = 0;
-        //    cout << "value: " << image(x,y) << endl;
-        //}
-    
-    //}
-
-    //computeDft(input);
-
-
-
     //calculate MSE between two images
-    float sum_squared = 0;
+    float
+    
+    sum_squared = 0;
     float mse = 0;
     
 
@@ -149,56 +147,19 @@ int main()
 
     mse = sum_squared/area;
 
+    Mat origin = imread("/home/mosch/Documents/Restoration/lena_full.jpg", CV_LOAD_IMAGE_GRAYSCALE);
+    Mat origin_float;
+    origin.convertTo(origin_float, CV_32FC1, 1.0 / 255.0);
+    Mat dftOUT;
+
+    takeDFT(origin_float, dftOUT);
+    showDFT(dftOUT);
+
     CImgDisplay org_disp(original, "Original"), main_disp(image, "Low Quality Lena"), draw_disp(image2, "Median Filtered");
     cout << "MSE: " << mse << endl;
 
-/*
-    //calculate dft 
-    cimg_forX(image,x)
-    {
-        complex<double> sum(0.0,0.0);
-
-        cimg_forY(image,y)
-        {
-            int integers = -2*x*y;
-            complex<float> expo(0.0, M_PI/area*(double)integers);
-            sum += image(y) * exp(expo);
-        }
-
-        cout << "DFT: " << abs(sum) << endl;    
-    }
-*/
-
-/*
-    complex<float> image3 = CImg<float> image;
-    complex<double> output_seq[int(area)];
-    double pi2 = 2.0 * M_PI;
-    double angleTerm,cosineA,sineA;
-    double invs = 1.0 / area;
-
-    cimg_forX(image3,x)
-    {
-        output_seq[x] = 0;
-
-        cimg_forY(image3,y)
-        {
-            angleTerm = pi2 * y * x * invs;
-            cosineA = cos(angleTerm);
-            sineA = sin(angleTerm);
-            
-            output_seq[y].real += image3(y).real * cosineA - image3(y).imag * sineA;
-            output_seq[y].imag += image3(y).real * sineA + image3(y).imag * cosineA;
-        }
-        output_seq[x] *= invs;
-    }
-
-    for (int z = 0; z < area; z++)
-    {
-        cout << "DFT: " << output_seq[z] << endl;
-    }
-*/
-
     //display the images
+
     while(!draw_disp.is_closed)
     {
         draw_disp.wait();
