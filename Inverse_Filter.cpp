@@ -349,13 +349,13 @@ Mat rand_noise(Mat I, int stddev){
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 //Attempt at a simple Inverse Filter. This isn't that good when there's noise.
-Mat inverseFilter(CImg<float> source){
+Mat inverseFilter(Mat Y){
 //Step 1 Trying to convert CImg float into a Mat type
-Mat Y = Mat(source.width,source.height, CV_32FC2);
+//Mat Y = Mat(source.width,source.height, CV_32FC2);
 //Step 2 User inputs a guess for blur. Common Gaussian blur is 1/16[1,2,1;2,4,2;1,2,1]
-float blur[3][3];
-for (int i = 0; i <= 2; i++){
-     for (int j = 0; j <= 2; j++){
+float blur[5][5];
+for (int i = 0; i <= 4; i++){
+     for (int j = 0; j <= 4; j++){
            cin >> blur[i][j];
 	 }
 }
@@ -386,9 +386,10 @@ int main(){
     CImg<float> image2;
     CImg<float> image3;
     CImg<float> image4;
+	Mat distorted;
 	Mat image5;
 
-    string location = "/Users/Class2018/Desktop/Intro_to_Image_Proc_and_Coding/lena_full.jpg";
+    string location = "/home/mosch/Documents/Restoration/lena_full.jpg";
     original.load(location.c_str());
     image = original.get_RGBtoYCbCr().get_channel(0);
 
@@ -398,12 +399,13 @@ int main(){
 
     //mess it up
     image.noise(60,0); //30, 2 crazy good for median filter
-    //image.blur(2.5);
+	
 
     image2 = medianFilter(image);
     image3 = meanFilter(image);
     image4 = gaussianBlur(image);
-	image5 = inverseFilter(image);
+
+	
 
     //calculate MSE between two images
     cout << "MSE: " << MSE(image2, image2) << endl;   
@@ -413,11 +415,20 @@ int main(){
     origin.convertTo(origin_float, CV_32FC1, 1.0 / 255.0);
     Mat dftOUT;
 
+	
+	//Applied a Gaussian Blur and then took that Mat and input into inverseFilter. Then do imshow to show resutls of inverse filter
+	GaussianBlur( origin, distorted, Size( 5, 5), 0, 0 );
+	image5 = inverseFilter(distorted);
+	imshow("Inverse Filter", image5);
+
+
     takeDFT(origin_float, dftOUT);
     showDFT(dftOUT);
 
+
+
     CImgDisplay noise_disp(image, "Original"), median_disp(image2, "Median Filtered"), mean_disp(image3, "Mean Filtered"), gaus_disp(image4, "Gaussian Blur");
-	imshow("Inverse Filter", image5);
+	
 	//CImgDisplay org_disp(original, "Original"), main_disp(image, "Blur/Noise"), draw_disp(image2, "Median Filtered");
     //imshow("DFT Magnitude", showDFT(dftOUT));
     //waitKey();
