@@ -349,35 +349,46 @@ Mat rand_noise(Mat I, int stddev){
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
 
 //Attempt at a simple Inverse Filter. This isn't that good when there's noise.
-//Step 1, let's estimate the blur kernal. This allows the user to input what they think is the blur
-void InverseFilter(Mat Y){
+Mat inverseFilter(CImg<float> source){
+//Step 1 Trying to convert CImg float into a Mat type
+Mat Y = Mat(source.width,source.height, CV_32FC2);
+//Step 2 User inputs a guess for blur. Common Gaussian blur is 1/16[1,2,1;2,4,2;1,2,1]
 float blur[3][3];
 for (int i = 0; i <= 2; i++){
-     for (int j = 0; j < = 2; j++){
+     for (int j = 0; j <= 2; j++){
            cin >> blur[i][j];
 	 }
 }
+//Step 3try to convert this vector into a Mat type
 Mat H = Mat(3,3, CV_32F, blur);
-//Step 2 we take the dft of the guesstimated blur kernal
+//Step 4 take dft of blur kernal
 dft(H, H);
-//Step 3 we take the dft of the output signal
+//Step 5 take dft of the distorted image
 dft(Y, Y);
-//Step 4 we divide output by the blur to get an estimation for the original signal
+//Step 6 we divide output by the blur to get an estimation for the original signal
 Mat estimatedX=Y/H;
-//Step 5 perform a recerse DFT of the estimate.
+//Step 7 perform a recerse DFT of the estimate.
 dft(estimatedX,estimatedX, DFT_INVERSE);
-//At this point, estiated X should be a matrix with an attempt at deblurring
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-int main()
-{
+
+//CImg<float> estimatedImage;
+//estimatedImage.assign((float)estimatedImage.width, (float)estimatedImage.height);
+
+//return estimatedImage;
+return estimatedX;
+};
+
+
+int main(){
+
     CImg<float> original;
     CImg<float> image;
     CImg<float> image2;
     CImg<float> image3;
     CImg<float> image4;
+	Mat image5;
 
-    string location = "/home/mosch/Documents/Restoration/lena_full.jpg";
+    string location = "/Users/Class2018/Desktop/Intro_to_Image_Proc_and_Coding/lena_full.jpg";
     original.load(location.c_str());
     image = original.get_RGBtoYCbCr().get_channel(0);
 
@@ -392,6 +403,7 @@ int main()
     image2 = medianFilter(image);
     image3 = meanFilter(image);
     image4 = gaussianBlur(image);
+	image5 = inverseFilter(image);
 
     //calculate MSE between two images
     cout << "MSE: " << MSE(image2, image2) << endl;   
@@ -405,7 +417,8 @@ int main()
     showDFT(dftOUT);
 
     CImgDisplay noise_disp(image, "Original"), median_disp(image2, "Median Filtered"), mean_disp(image3, "Mean Filtered"), gaus_disp(image4, "Gaussian Blur");
-    //CImgDisplay org_disp(original, "Original"), main_disp(image, "Blur/Noise"), draw_disp(image2, "Median Filtered");
+	imshow("Inverse Filter", image5);
+	//CImgDisplay org_disp(original, "Original"), main_disp(image, "Blur/Noise"), draw_disp(image2, "Median Filtered");
     //imshow("DFT Magnitude", showDFT(dftOUT));
     //waitKey();
 
@@ -414,7 +427,6 @@ int main()
     {
         mean_disp.wait();
     }
-
 
     return 0;
 }
