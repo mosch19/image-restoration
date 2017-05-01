@@ -29,20 +29,17 @@ void takeDFT(Mat& source, Mat& destination)
 
     destination = dftOUT;
 }
-
-//Matt added here
-void takeBlurDFT(Mat& source, Mat& destination)
+void takeInverseDFT(Mat& source, Mat& destination)
 {
     Mat dftIN[2] = {source, Mat::zeros(source.size(), CV_32F)};
     Mat dftReady;
     merge(dftIN, 2, dftReady);
     Mat dftOUT;
     
-    dft(dftReady, dftOUT, DFT_COMPLEX_OUTPUT);
+	dft(dftReady, dftOUT, DFT_INVERSE);
 
     destination = dftOUT;
 }
-
 
 
 Mat showDFT(Mat& source)
@@ -353,28 +350,26 @@ Mat inverseFilter(Mat Y){
 //Step 1 Trying to convert CImg float into a Mat type
 //Mat Y = Mat(source.width,source.height, CV_32FC2);
 //Step 2 User inputs a guess for blur. Common Gaussian blur is 1/16[1,2,1;2,4,2;1,2,1]
-float blur[5][5];
-for (int i = 0; i <= 4; i++){
-     for (int j = 0; j <= 4; j++){
-           cin >> blur[i][j];
+float blur[3][3];
+for (int i = 0; i <= 2; i++){
+     for (int j = 0; j <= 2; j++){
+		cout << "Enter an estimated blur kernal" <<endl;
+		cin >> blur[i][j];
 	 }
 }
 //Step 3try to convert this vector into a Mat type
-Mat H = Mat(3,3, CV_32F, blur);
+Mat H = Mat(3,3, CV_32FC2, blur);
 //Step 4 take dft of blur kernal
-dft(H, H);
+takeDFT(H, H);
+showDFT(H);
 //Step 5 take dft of the distorted image
-dft(Y, Y);
+takeDFT(Y, Y);
+showDFT(Y);
 //Step 6 we divide output by the blur to get an estimation for the original signal
 Mat estimatedX=Y/H;
 //Step 7 perform a recerse DFT of the estimate.
-dft(estimatedX,estimatedX, DFT_INVERSE);
+takeInverseDFT(estimatedX,estimatedX);
 
-
-//CImg<float> estimatedImage;
-//estimatedImage.assign((float)estimatedImage.width, (float)estimatedImage.height);
-
-//return estimatedImage;
 return estimatedX;
 };
 
