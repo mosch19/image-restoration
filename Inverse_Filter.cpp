@@ -416,8 +416,8 @@ int main(){
     Mat dftOUT;
 
 	
-	//Applied a Gaussian Blur and then took that Mat and input into inverseFilter. Then do imshow to show resutls of inverse filter
-	GaussianBlur( origin, distorted, Size( 5, 5), 0, 0 );
+	//Applied a  Blur and then took that Mat and input into inverseFilter. Then do imshow to show resutls of inverse filter
+	blur(origin, distorted, Size (3,3), Point(-1,-1), BORDER_DEFAULT);
 	image5 = inverseFilter(distorted);
 	imshow("Inverse Filter", image5);
 
